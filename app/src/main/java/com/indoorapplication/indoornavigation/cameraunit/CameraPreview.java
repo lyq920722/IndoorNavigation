@@ -53,7 +53,7 @@ public class CameraPreview extends TextureView implements
             //mCamera = null;
         }catch (Exception e){
             Log.e("Exception",e.toString()+"");
-            Toast.makeText(context,"Camara bug",Toast.LENGTH_SHORT).show();
+            Toast.makeText(context,"请打开摄像头权限并重启APP",Toast.LENGTH_SHORT).show();
             return;
         }
         Camera.Parameters objParam = mCamera.getParameters();
