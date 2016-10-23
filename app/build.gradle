@@ -1,0 +1,101 @@
+apply plugin: 'com.android.application'
+
+android {
+    signingConfigs {
+
+    }
+    compileSdkVersion 23
+    buildToolsVersion "23.0.3"
+
+    defaultConfig {
+        applicationId "com.indoorapplication.indoornavigation"
+        minSdkVersion 14
+        targetSdkVersion 21
+        versionCode 1
+        versionName "1.0"
+        ndk {
+            //abiFilter "armeabi-v7a"
+            abiFilter "armeabi"
+        }
+    }
+
+
+    sourceSets {
+        main {
+            //jniLibs.srcDirs = ['libs']
+            jniLibs.srcDirs = ['src/main/libs']
+        }
+    }
+
+    productFlavors {
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+        debug {
+        }
+    }
+}
+
+allprojects {
+    repositories {
+        jcenter()
+        flatDir {
+            dirs 'src/main/libs'
+        }
+    }
+}
+
+dependencies {
+    compile fileTree(include: ['Native_Libs2.jar'], dir: '$projectDir/libs')
+    //compile fileTree(dir: 'libs', include: ['*.jar'])
+    //    testCompile 'junit:junit:4.12'
+    //    compile 'com.android.support:appcompat-v7:23.3.0'
+    compile(name: 'IndoorMapSDK2.0.0', ext: 'aar')
+    compile 'com.android.support:appcompat-v7:23.1.0'
+    compile 'com.android.support:design:23.1.0'
+    compile 'com.google.android.gms:play-services-appindexing:8.1.0'
+    compile 'com.android.support:support-v4:23.2.0'
+    compile files('src/main/libs/indooroutdoordetector-1.1.jar')
+    compile files('src/main/libs/indoorpdr-5.6.jar')
+    compile files('src/main/libs/indoorutil-1.1.jar')
+    compile files('src/main/libs/onlinelocation-5.6.jar')
+    compile files('src/main/libs/indoorlocation-5.6.jar')
+}
+
+// 下面这个脚本用于拷贝其他lib的so到本系统目录下
+task copyLibs(type: Copy) {
+    def indoor_render_sdk_home = "../IndoorMapSdk/";
+    //def jarPath = "build/intermediates/bundles/debug/classes.jar"
+    //def jarPath = "build/intermediates/bundles/release/classes.jar"
+    //def aarPath = "build/outputs/aar/IndoorMapSDK-debug.aar"
+    def aarPath = "build/outputs/aar/IndoorMapSDK-release.aar"
+    def destDir = "src/main/"
+
+    // so
+    copy {
+        from(indoor_render_sdk_home + "src/main/libs/armeabi/libIndoorMapSDK2.0.0.so")
+        into(destDir+"/libs/armeabi")
+    }
+    copy {
+        from(indoor_render_sdk_home + "src/main/libs/armeabi-v7a/libIndoorMapSDK2.0.0.so")
+        into(destDir+"/libs/armeabi-v7a")
+    }
+    // jar
+//    copy {
+//        from(indoor_render_sdk_home + jarPath)
+//        into(destDir+"/libs/")
+//        rename { filename -> filename.replace 'classes', 'IndoorMapSDK2.0'}
+//    }
+    // aar
+    copy {
+        from(indoor_render_sdk_home + aarPath)
+        into(destDir+"/libs/")
+        rename { filename -> filename.replace 'IndoorMapSDK-release', 'IndoorMapSDK2.0.0'}
+    }
+
+    println "IndoorRenderSdk拷贝文件完成. "
+}
+

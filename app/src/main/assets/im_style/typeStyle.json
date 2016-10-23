@@ -1,0 +1,320 @@
+//  按类型配置样式
+[
+/*
+面对像开始
+-字段：[拔高],[顶线颜色],[顶面颜色],[侧面颜色1],[侧面颜色2],[高亮颜色]
+-拔高：0不拔高，>0拔高，<0下沉
+-颜色：16进制颜色色值
+*/
+{
+    "1001": {
+        "name": "餐饮",
+		"para": "1,0xffad9f87,0xfffae6c3,0xffe1cfaf,0xffc8b89c,0xffFFe6c3"
+    },
+    "1002": {
+        "name": "休闲娱乐",
+		"para": "1,0xff8ba5b3,0xffc7ecff,0xffb3d4e5,0xff9fbdcc,0xffFFecff"
+    },
+	"1003": {
+        "name": "购物",
+		"para": "1,0xffa69496,0xfff2d8db,0xffd9c2c5,0xffc2adaf,0xffFFd8db"
+    },
+	"1004": {
+        "name": "其他",
+		"para": "1,0xff999999,0xffe6e6e6,0xffcfcfcf,0xffb8b8b8,0xffFFe6e6"
+    },
+	"1005": {
+        "name": "洗手间",
+		"para": "1,0xff878c99,0xffe1eaff,0xffcad2e5,0xffb4bbcc,0xffFF8c99"
+    },
+	"1006": {
+        "name": "水平面",
+		"para": "0,0xff999999,0xffe6e6e6,0xffcfcfcf,0xffb8b8b8,0xffe6e6e6"
+    },
+	"1007": {
+        "name": "中空面",
+		"para": "-1,0xff999999,0xffe6e6e6,0xffcfcfcf,0xffb8b8b8,0xffe6e6e6"
+    },
+	"1901": {
+        "name": "可通行区域",
+		"para": "0,0xffab88ab,0xfffcfcfa,0xfffcfcfa,0xfffcfcfa,0xfffcfcfa"
+    },
+	"1902": {
+        "name": "背景面",
+		"para": "0,,0xffcfcfcf,0xffcfcfcf,0xffcfcfcf,0xffcfcfcf"
+	},
+    "1101": {
+	    "name": "星巴克咖啡",
+		"para": "1,0xffad9f87,0xff0033ff,0xfffff2e2,0xfffff2e2,0xff0033cc"
+	},
+	"1102": {
+	    "name": "哈根达斯",
+		"para": "1,0xffad9f87,0xff0033ff,0xfffff2e2,0xfffff2e2,0xff0033cc"
+	},	
+	"1103": {
+	    "name": "必胜客",
+		"para": "1,0xffad9f87,0xff0033ff,0xfffff2e2,0xfffff2e2,0xff0033cc"
+	},	
+	"1104": {
+	    "name": "麦当劳",
+		"para": "1,0xffad9f87,0xff0033ff,0xfffff2e2,0xfffff2e2,0xff0033cc"
+	},
+	"1105": {
+	    "name": "味千拉面",
+		"para": "1,0xffad9f87,0xff0033ff,0xfffff2e2,0xfffff2e2,0xff0033cc"
+	},
+	"1106": {
+	    "name": "优衣库",
+		"para": "1,0xffad9f87,0xff0033ff,0xfffff2e2,0xfffff2e2,0xff0033cc"
+	},
+	"1039": {
+	"name": "河流",
+		"para":"0,0xffc7ecff,0xffc7ecff,0xffc7ecff,0xffc7ecff,0xffc7ecff"
+	}
+}
+,
+/*
+线对像开始
+-字段：[级别],[线粗细],[线颜色],[线面颜色],[高亮颜色]
+-颜色：16进制颜色色值
+*/
+{
+    "2017": {
+        "name": "道路",
+        "para":
+        {
+            "16":"3,0xffad9f87,0xfffae6c3,0xffe1cfaf",
+            "18":"5,0xffad9f87,0xfffff2e2,0xffffdaae"
+		}
+    }
+}
+,
+/*
+点对象开始
+-字段：[级别],[文字大小],[文字颜色],[文字字体],[旋转方式],[标注方式],[是否避让],[避让优先级]
+-文字大小：文字字号，0代表无文字标注，文字相关参数自动无效
+-文字颜色：16进制颜色色值
+-文字字体：0默认字体，待扩展
+-旋转方式：0不跟随图面旋转，1跟随图面旋转
+-标注方式：0默认下右左上，待扩展
+-是否避让：0不可避让，1可避让
+-避让优先级：1-99，代表避让优先优先级，默认50
+-文字显示比例尺：多大比例尺及以上显示文字标注。
+-ICON文件名：对应ICON文件夹下ICON文件名
+-ICON显示比例尺：多大比例尺及以上显示ICON。
+*/
+{
+    "3001": {
+        "name": "美食",
+		"para":
+		{
+			"1":"24,0xff8e6b4e,0,1,0,1,50,1.food.png",
+			"20":"28,0xff8e6b4e,0,1,0,1,50,1.food.png",
+			"21":"32,0xff8e6b4e,0,1,0,1,50,1.food.png",
+			"22":"36,0xff8e6b4e,0,1,0,1,50,1.food.png"
+		}
+    },
+	"3002": {
+        "name": "咖啡",
+		"para":
+		{
+			"1":"24,0xff8e6b4e,0,1,0,1,50,2.coffee.png",
+			"20":"28,0xff8e6b4e,0,1,0,1,50,2.coffee.png",
+			"21":"32,0xff8e6b4e,0,1,0,1,50,2.coffee.png",
+			"22":"36,0xff8e6b4e,0,1,0,1,50,2.coffee.png"
+		}
+    },
+	"3003": {
+        "name": "购物",
+		"para":
+		{
+			"1":"24,0xff8e6b4e,0,1,0,1,50,3.shopping.png",
+			"20":"28,0xff8e6b4e,0,1,0,1,50,3.shopping.png",
+			"21":"32,0xff8e6b4e,0,1,0,1,50,3.shopping.png",
+			"22":"36,0xff8e6b4e,0,1,0,1,50,3.shopping.png"
+		}
+    },
+	"3004": {
+        "name": "超市",
+		"para":
+		{
+			"1":"24,0xff8e6b4e,0,1,0,1,50,4.supermarket.png",
+			"20":"28,0xff8e6b4e,0,1,0,1,50,4.supermarket.png",
+			"21":"32,0xff8e6b4e,0,1,0,1,50,4.supermarket.png",
+			"22":"36,0xff8e6b4e,0,1,0,1,50,4.supermarket.png"
+		}
+    },
+	"3005": {
+        "name": "娱乐",
+		"para":
+		{
+			"1":"24,0xff8e6b4e,0,1,0,1,50,5.enjoy.png",
+			"20":"28,0xff8e6b4e,0,1,0,1,50,5.enjoy.png",
+			"21":"32,0xff8e6b4e,0,1,0,1,50,5.enjoy.png",
+			"22":"36,0xff8e6b4e,0,1,0,1,50,5.enjoy.png"
+		}
+    },
+	"3006": {
+        "name": "电影院",
+		"para":
+		{
+			"1":"24,0xff8e6b4e,0,1,0,1,50,6.movie.png",
+			"20":"28,0xff8e6b4e,0,1,0,1,50,6.movie.png",
+			"21":"32,0xff8e6b4e,0,1,0,1,50,6.movie.png",
+			"22":"36,0xff8e6b4e,0,1,0,1,50,6.movie.png"
+		}
+    },
+	"3007": {
+        "name": "门",
+		"para": "24,0xff8e6b4e,0,1,0,1,50,7.door.png"
+    },
+	"3008": {
+        "name": "扶梯",
+		"para": "0,0xff8e6b4e,0,1,0,1,50,8.handladder.png"
+    },
+	"3009": {
+        "name": "电梯",
+		"para": "0,0xff8e6b4e,0,1,0,1,50,9.elevtor.png"
+    },
+	"3010": {
+        "name": "楼梯",
+		"para": "0,0xff8e6b4e,0,1,0,1,50,10.footladder.png"
+    },
+	"3011": {
+        "name": "ATM",
+		"para": "24,0xff8e6b4e,0,1,0,1,50,11.ATM.png"
+    },
+	"3012": {
+        "name": "停车场",
+		"para": "24,0xff8e6b4e,0,1,0,1,50,12.park.png"
+    },
+	"3013": {
+        "name": "洗手间",
+		"para": "24,0xff8e6b4e,0,1,0,1,50,13.bashroom.png"
+    },
+	"3014": {
+        "name": "公共电话",
+		"para": "0,0xff8e6b4e,0,1,0,1,50,14.phone.png"
+    },
+	"3015": {
+        "name": "问讯处",
+		"para":
+		{
+			"1":"24,0xff8e6b4e,0,1,0,1,50,15.asking.png",
+			"20":"28,0xff8e6b4e,0,1,0,1,50,15.asking.png",
+			"21":"32,0xff8e6b4e,0,1,0,1,50,15.asking.png",
+			"22":"36,0xff8e6b4e,0,1,0,1,50,15.asking.png"
+		}
+    },
+	"3016": {
+        "name": "收银台",
+		"para":
+		{
+			"1":"24,0xff8e6b4e,0,1,0,1,50,16.cashing.png",
+			"20":"28,0xff8e6b4e,0,1,0,1,50,16.cashing.png",
+			"21":"32,0xff8e6b4e,0,1,0,1,50,16.cashing.png",
+			"22":"36,0xff8e6b4e,0,1,0,1,50,16.cashing.png"
+		}
+    },
+	"3017": {
+        "name": "其他",
+		"para":
+		{
+			"1":"24,0xff8e6b4e,0,1,0,1,50,17.others.png",
+			"20":"28,0xff8e6b4e,0,1,0,1,50,17.others.png",
+			"21":"32,0xff8e6b4e,0,1,0,1,50,17.others.png",
+			"22":"36,0xff8e6b4e,0,1,0,1,50,17.others.png"
+		}		
+    },
+    "3018": {
+        "name": "停车位",
+		"para":
+		{
+			"1":"18,0xff8e6b4e,0,1,0,1,50",
+			"20":"24,0xff8e6b4e,0,1,0,1,50",
+			"21":"24,0xff8e6b4e,0,1,0,1,50",
+			"22":"28,0xff8e6b4e,0,1,0,1,50"
+		}
+	},
+    "3101": {
+        "name": "星巴克咖啡",
+		"para":
+		{
+			"1":"24,0xff8e6b4e,0,1,0,1,50,brandIcon/30100083.png",
+			"20":"28,0xff8e6b4e,0,1,0,1,50,brandIcon/30100083.png",
+			"21":"32,0xff8e6b4e,0,1,0,1,50,brandIcon/30100083.png",
+			"22":"36,0xff8e6b4e,0,1,0,1,50,brandIcon/30100083.png"
+		}
+    },
+	"3102": {
+        "name": "哈根达斯",
+		"para": 
+		{
+			"1":"24,0xff8e6b4e,0,1,0,1,50,brandIcon/30400817.png",
+			"20":"28,0xff8e6b4e,0,1,0,1,50,brandIcon/30400817.png",
+			"21":"32,0xff8e6b4e,0,1,0,1,50,brandIcon/30400817.png",
+			"22":"36,0xff8e6b4e,0,1,0,1,50,brandIcon/30400817.png"
+		}
+    },
+	"3103": {
+        "name": "必胜客",
+		"para":
+		{
+			"1":"24,0xff8e6b4e,0,1,0,1,50,brandIcon/30030076.png",
+			"20":"28,0xff8e6b4e,0,1,0,1,50,brandIcon/30030076.png",
+			"21":"32,0xff8e6b4e,0,1,0,1,50,brandIcon/30030076.png",
+			"22":"36,0xff8e6b4e,0,1,0,1,50,brandIcon/30030076.png"
+		}		
+    },
+	"3104": {
+        "name": "麦当劳",
+		"para":
+		{
+			"1":"24,0xff8e6b4e,0,1,0,1,50,30020075.png",
+			"20":"28,0xff8e6b4e,0,1,0,1,50,30020075.png",
+			"21":"32,0xff8e6b4e,0,1,0,1,50,30020075.png",
+			"22":"36,0xff8e6b4e,0,1,0,1,50,30020075.png"
+		}		
+    },
+	"3105": {
+        "name": "味千拉面",
+		"para":
+		{
+			"1":"24,0xff8e6b4e,0,1,0,1,50,brandIcon/30180225.png",
+			"20":"28,0xff8e6b4e,0,1,0,1,50,brandIcon/30180225.png",
+			"21":"32,0xff8e6b4e,0,1,0,1,50,brandIcon/30180225.png",
+			"22":"36,0xff8e6b4e,0,1,0,1,50,brandIcon/30180225.png"
+		}
+    },
+	"3106": {
+        "name": "优衣库",
+		"para":
+		{
+			"1":"24,0xff8e6b4e,0,1,0,1,50,brandIcon/41691380.png",
+			"20":"28,0xff8e6b4e,0,1,0,1,50,brandIcon/41691380.png",
+			"21":"32,0xff8e6b4e,0,1,0,1,50,brandIcon/41691380.png",
+			"22":"36,0xff8e6b4e,0,1,0,1,50,brandIcon/41691380.png"
+		}
+	},
+    "3201": {
+        "name": "道路",
+		"para":
+		{
+			"1":"18,0xff8e6b4e,0,1,0,1,50",
+			"20":"24,0xff8e6b4e,0,1,0,1,50",
+			"21":"24,0xff8e6b4e,0,1,0,1,50",
+			"22":"28,0xff8e6b4e,0,1,0,1,50"
+		}
+	},
+    "3202": {
+        "name": "河流",
+		"para":
+		{
+			"1":"18,0xff8e6b4e,0,1,0,1,50",
+			"20":"24,0xff8e6b4e,0,1,0,1,50",
+			"21":"24,0xff8e6b4e,0,1,0,1,50",
+			"22":"28,0xff8e6b4e,0,1,0,1,50"
+		}
+    }
+}
+]
