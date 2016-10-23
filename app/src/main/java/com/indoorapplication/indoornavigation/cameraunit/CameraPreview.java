@@ -56,6 +56,9 @@ public class CameraPreview extends TextureView implements
             Toast.makeText(context,"请打开摄像头权限并重启APP",Toast.LENGTH_SHORT).show();
             return;
         }
+        if(mCamera == null){
+            return;
+        }
         Camera.Parameters objParam = mCamera.getParameters();
         objParam.setPreviewSize(Constant.height,Constant.width);
         //设置对焦模式为持续对焦，（最好先判断一下手机是否有这个对焦模式，有些手机没有会报错的）
@@ -80,6 +83,9 @@ public class CameraPreview extends TextureView implements
     public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width,
                                             int height) {
         //实现自动对焦
+        if(mCamera == null){
+            return;
+        }
         mCamera.autoFocus(new Camera.AutoFocusCallback() {
             @Override
             public void onAutoFocus(boolean success, Camera camera) {
@@ -94,9 +100,11 @@ public class CameraPreview extends TextureView implements
     }
 
     public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
-        mCamera.stopPreview();
-        mCamera.release();
-        mCamera = null;
+        if(mCamera != null){
+            mCamera.stopPreview();
+            mCamera.release();
+            mCamera = null;
+        }
         return true;
     }
 
