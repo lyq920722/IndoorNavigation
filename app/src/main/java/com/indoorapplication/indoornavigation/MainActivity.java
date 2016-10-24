@@ -2,6 +2,7 @@ package com.indoorapplication.indoornavigation;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.Application;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
@@ -30,6 +31,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.amap.api.im.data.IMDataManager;
+import com.amap.api.im.listener.DownloadStatusCode;
+import com.amap.api.im.listener.IMDataDownloadListener;
 import com.amap.api.im.listener.IMMapEventListener;
 import com.amap.api.im.listener.IMMapLoadListener;
 import com.amap.api.im.listener.MapLoadStatus;
@@ -73,9 +76,8 @@ public class MainActivity extends FragmentActivity implements SensorEventListene
     private Context mContext = null;
     private ImageView mCustomImage = null;
     private IMDataManager mDataManager = null;
-    String defaultBuilding = "B0FFFAB6J2"; //B0FFFAB6J2  B000A80ZU6
+    String defaultBuilding = "B000A80ZU6"; //B0FFFAB6J2  B000A80ZU6
     FrameDrawOverRunnable mFrameDrawOverRunnable = null;
-
     private LinearLayout layout_map;
     private View view_map;
     private ImageView img_close;
@@ -88,7 +90,6 @@ public class MainActivity extends FragmentActivity implements SensorEventListene
         super.onCreate(savedInstanceState);
         mContext = this.getApplicationContext();
         setContentView(R.layout.activity_main);
-
         CrashHandler crashHandler = CrashHandler.instance();
         crashHandler.init();
         //初始化相机
@@ -172,8 +173,7 @@ public class MainActivity extends FragmentActivity implements SensorEventListene
         });
         IMDataManager.setRequestTimeOut(5000);
 //        mDataManager.setDataPath(Environment.getExternalStorageDirectory() + "/test_data");
-//        mDataManager.downloadBuildingData(mBuildingId, mDataDownloadListener);
-
+        mDataManager.downloadBuildingData(mContext,defaultBuilding, mDataDownloadListener);
         //mDataManager.setDataPath(Environment.getExternalStorageDirectory() + "/test_data");
         //mIndoorMapFragment.setDataPath(Environment.getExternalStorageDirectory() + "/test_data");
         mIndoorMapFragment.loadMap(defaultBuilding, mMapLoadListener);//B023B173VP
@@ -216,6 +216,9 @@ public class MainActivity extends FragmentActivity implements SensorEventListene
 
         txtOrientationTextView = (TextView) findViewById(R.id.txtOrientationTextView);
         // Get the SensorManager instance
+        txtOrientationTextView.setText("key:\n22dda8de2a3800c30147cb0f3f119a1c\n\n"+
+                "BuildId: B000A80ZU6\n\n"+
+                "SHA:\n" + CommonUtil.SHA1(mContext)+"\n\n"+"packege:\n"+ this.getPackageName());
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         // 创建Preview view并将其设为activity中的内容
         mPreview = new CameraPreview(this);
@@ -461,7 +464,7 @@ public class MainActivity extends FragmentActivity implements SensorEventListene
             stringBuilder.append("Azimuth: "+ Math.toDegrees(orientationData[0]));
             stringBuilder.append("\nPitch: "+ Math.toDegrees(orientationData[1]));
             stringBuilder.append("\nRoll: "+ Math.toDegrees(orientationData[2]));
-            txtOrientationTextView.setText(stringBuilder.toString());
+            //txtOrientationTextView.setText(stringBuilder.toString());
             if(-20 < Math.toDegrees(orientationData[2])&& Math.toDegrees(orientationData[2]) < 20){
                 txtOrientationTextView.setTextColor(Color.parseColor("#ffffff"));
             }else{
@@ -507,6 +510,35 @@ public class MainActivity extends FragmentActivity implements SensorEventListene
         }
         return c; // 不可用则返回null
     }
+
+    /**
+     * 下载回调接口
+     */
+    private IMDataDownloadListener mDataDownloadListener = new IMDataDownloadListener() {
+
+        @Override
+        public void onDownloadSuccess(String buildingId) {
+            // TODO Auto-generated method stub
+            IMLog.logd("#######-------- download success:" + buildingId + ", id:" + Thread.currentThread().getId());
+            //mDataManager.loadBuildingData();
+
+        }
+
+        @Override
+        public void onDownloadFailure(String buildingId, DownloadStatusCode statusCode) {
+            // TODO Auto-generated method stub
+            IMLog.logd("#######-------- download failure:" + buildingId + ", errorCode:" +
+                    statusCode + ", id:" + Thread.currentThread().getId());
+        }
+
+        @Override
+        public void onDownloadProgress(String buildingId, float progress) {
+            // TODO Auto-generated method stub
+            IMLog.logd("####### building:" + buildingId + ", progress:" + progress + ", id:" + Thread.currentThread().getId());
+
+        }
+
+    };
 
 
 }

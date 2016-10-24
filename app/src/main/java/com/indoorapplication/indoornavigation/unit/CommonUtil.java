@@ -3,6 +3,8 @@ package com.indoorapplication.indoornavigation.unit;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.CompressFormat;
 import android.graphics.BitmapFactory;
@@ -15,6 +17,8 @@ import com.indoorapplication.indoornavigation.config.Constant;
 import java.io.ByteArrayOutputStream;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.text.DecimalFormat;
 import java.util.Locale;
 
@@ -561,6 +565,32 @@ public class CommonUtil {
 			b2[n / 2] = (byte) Integer.parseInt(item, 16);
 		}
 		return b2;
+	}
+
+	public static String SHA1(Context context) {
+		try {
+			PackageInfo info = context.getPackageManager().getPackageInfo(
+					context.getPackageName(), PackageManager.GET_SIGNATURES);
+			byte[] cert = info.signatures[0].toByteArray();
+			MessageDigest md = MessageDigest.getInstance("SHA1");
+			byte[] publicKey = md.digest(cert);
+			StringBuffer hexString = new StringBuffer();
+			for (int i = 0; i < publicKey.length; i++) {
+				String appendString = Integer.toHexString(0xFF & publicKey[i])
+						.toUpperCase(Locale.US);
+				if (appendString.length() == 1)
+					hexString.append("0");
+				hexString.append(appendString);
+				hexString.append(":");
+			}
+			String result = hexString.toString();
+			return result.substring(0, result.length()-1);
+		} catch (PackageManager.NameNotFoundException e) {
+			e.printStackTrace();
+		} catch (NoSuchAlgorithmException e) {
+			e.printStackTrace();
+		}
+		return null;
 	}
 	
 

@@ -18,6 +18,7 @@ import android.widget.Toast;
 import com.indoorapplication.indoornavigation.config.Constant;
 
 import java.io.IOException;
+import java.util.List;
 
 import static android.Manifest.permission_group.CAMERA;
 import static android.content.pm.PackageManager.PERMISSION_GRANTED;
@@ -59,8 +60,23 @@ public class CameraPreview extends TextureView implements
         if(mCamera == null){
             return;
         }
+        //mCamera.getParameters().getSupportedPreviewSizes();
         Camera.Parameters objParam = mCamera.getParameters();
-        objParam.setPreviewSize(Constant.height,Constant.width);
+
+        Camera.Size bestSize = null;
+
+        List<Camera.Size> sizeList = mCamera.getParameters().getSupportedPreviewSizes();
+        bestSize = sizeList.get(0);
+
+        for(int i = 1; i < sizeList.size(); i++){
+            if((sizeList.get(i).width * sizeList.get(i).height) >
+                    (bestSize.width * bestSize.height)){
+                bestSize = sizeList.get(i);
+            }
+        }
+
+        objParam.setPreviewSize(bestSize.width, bestSize.height);
+        //objParam.setPreviewSize(Constant.height,Constant.width);
         //设置对焦模式为持续对焦，（最好先判断一下手机是否有这个对焦模式，有些手机没有会报错的）
         objParam.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
         // m_objCamera.setDisplayOrientation(90);
