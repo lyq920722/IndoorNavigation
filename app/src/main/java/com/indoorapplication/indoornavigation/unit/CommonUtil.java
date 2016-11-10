@@ -191,14 +191,14 @@ public class CommonUtil {
 	 * @param lng2
 	 * @return
 	 */
-	public static float getDistance(float lat1, float lng1, float lat2,
-			float lng2) {
-		float x, y, distance = 0;
+	public static double getDistance(double lat1, double lng1, double lat2,
+									double lng2) {
+		double x, y, distance = 0;
 		try {
-			x = (float) ((lng2 - lng1) * Math.PI * Radius
+			x = (double) ((lng2 - lng1) * Math.PI * Radius
 					* Math.cos(((lat1 + lat2) / 2) * Math.PI / 180) / 180);
-			y = (float) ((lat2 - lat1) * Math.PI * Radius / 180);
-			distance = (float) Math.hypot(x, y);
+			y = (double) ((lat2 - lat1) * Math.PI * Radius / 180);
+			distance = (double) Math.hypot(x, y);
 		} catch (Exception e) {
 
 		}

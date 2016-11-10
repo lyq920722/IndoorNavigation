@@ -53,6 +53,8 @@ public class CameraPreview extends TextureView implements
             mCamera = Camera.open();
             //mCamera = null;
         }catch (Exception e){
+            mCamera.release();
+            mCamera = null;
             Log.e("Exception",e.toString()+"");
             Toast.makeText(context,"请打开摄像头权限并重启APP",Toast.LENGTH_SHORT).show();
             return;
@@ -117,6 +119,7 @@ public class CameraPreview extends TextureView implements
 
     public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
         if(mCamera != null){
+            mCamera.setPreviewCallback(null);
             mCamera.stopPreview();
             mCamera.release();
             mCamera = null;

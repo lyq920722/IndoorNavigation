@@ -40,21 +40,44 @@
             <!--android:background="@color/indoorbg_color"/>-->
     <!--</LinearLayout>-->
 
-    <!--<RelativeLayout-->
-        <!--android:layout_width="wrap_content"-->
-        <!--android:layout_height="wrap_content"-->
-        <!--android:layout_alignParentBottom="true"-->
-        <!--android:id="@+id/relativeLayout">-->
-        <!--<ImageView-->
-            <!--android:id="@+id/locating_btn"-->
-            <!--android:layout_width="wrap_content"-->
-            <!--android:layout_height="wrap_content"-->
-            <!--android:paddingLeft="2dp"-->
-            <!--android:paddingRight="2dp"-->
-            <!--android:layout_marginStart="5dp"-->
-            <!--android:layout_marginBottom="5dp"-->
-            <!--android:background="@android:color/white"-->
-            <!--android:src="@drawable/indoor_gps_unlocked"/>-->
-    <!--</RelativeLayout>-->
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:id="@+id/relativeLayout">
+        <ImageView
+            android:id="@+id/locating_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingLeft="2dp"
+            android:paddingRight="2dp"
+            android:visibility="gone"
+            android:layout_marginStart="5dp"
+            android:layout_marginBottom="5dp"
+            android:background="@android:color/white"
+            android:src="@drawable/indoor_gps_unlocked"/>
+    </RelativeLayout>
+
+    <Button
+        android:id="@+id/btn_route"
+        android:layout_width="100dp"
+        android:layout_height="50dp"
+        android:text="Route"
+        android:visibility="gone"
+        android:layout_above="@+id/relativeLayout"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginBottom="173dp" />
+
+    <Button
+        android:id="@+id/btn_route_clear"
+        android:layout_width="100dp"
+        android:layout_height="50dp"
+        android:text="Clear"
+        android:visibility="gone"
+        android:layout_above="@+id/relativeLayout"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginBottom="100dp" />
 
 </RelativeLayout>

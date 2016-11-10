@@ -5,6 +5,10 @@ package com.indoorapplication.indoornavigation.config;
  */
 
 public class Constant {
+    // 路算类型
+    public final static int TYPE_ROUTE_PLANNING_LOCATION = 1001;        // 位置点类型
+    public final static int TYPE_ROUTE_PLANNING_POI = 1002;             // Poi类型
+
 
     public static float density;                //屏幕密度
     public static int height;                   //屏幕高度
