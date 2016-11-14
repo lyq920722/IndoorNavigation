@@ -13,4 +13,5 @@ public class Constant {
     public static float density;                //屏幕密度
     public static int height;                   //屏幕高度
     public static int width;                    //屏幕宽度
+    public static String BASE_URL = "http://www.bjzllt.com/webroot/ajax/locations.php?";  //数据请求基础地址
 }

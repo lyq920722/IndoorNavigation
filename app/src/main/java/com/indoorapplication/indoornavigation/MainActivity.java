@@ -68,6 +68,7 @@ import com.indoorapplication.indoornavigation.http.RequestManager;
 import com.indoorapplication.indoornavigation.route.PathFragment;
 import com.indoorapplication.indoornavigation.route.PoiInfo;
 import com.indoorapplication.indoornavigation.route.PoiMapCell;
+import com.indoorapplication.indoornavigation.route.bean.GeometryEntity;
 import com.indoorapplication.indoornavigation.route.bean.PathInfo;
 import com.indoorapplication.indoornavigation.route.bean.RoadInfo;
 import com.indoorapplication.indoornavigation.route.bean.RoadPathInfo;
@@ -129,23 +130,28 @@ public class MainActivity extends FragmentActivity implements SensorEventListene
     private Button btn_route_clear;
     private IMPoint mLastPoint = null;
     private PriviewFragment priviewFragment = null;
-    private List<PathInfo.RouteEntity.PathEntity.NaviInfoListEntity.GeometryEntity> geometry;
+    private List<GeometryEntity> geometry;
+    private List<RoadPathInfo.RoadEntity> road;
 
     private PoiInfo mInfoFrom;
     private PoiInfo mInfoTo;
 
     private  Button btn_istest;
-    private boolean istest = true;
+    private boolean istest = true;  //是否测试模式
     private IMPoint mLocationPoint = null;
     private String mLocationBdId = "";
     private StringBuilder stringBuilder = new StringBuilder();
-    private double distance_ab = 0.0;
-    private double distance_ac = 0.0;
-    private double distance_bc = 0.0;
-    public static double THRESHOLD = 5.0;
-    private boolean isNavi = true;
-    private boolean isOnway = false;
-    private int index = 0;
+    private double distance_ab = 0.0; //前点距离
+    private double distance_ac = 0.0; //后点距离
+    private double distance_bc = 0.0; //线段距离
+    public static double THRESHOLD_WAY = 5.0;  //是否在路上阈值
+    public static double THRESHOLD_POINT = 3.0; //是否到达阈值
+    private boolean isNavi = true; //是否导航状态
+    private boolean isOnway = false; //是否在路上状态
+    private int index = 0; //导航数列进行下标
+    private String mentionInfo = "";     //导航主提示内容
+    private String subText = ""; //导航副提示内容
+    private double endDistance; //距离拐点距离
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -154,7 +160,7 @@ public class MainActivity extends FragmentActivity implements SensorEventListene
         setContentView(R.layout.activity_main);
 
 
-        String a = "http://www.bjzllt.com/webroot/ajax/locations.php?action=get_walk_by_gda&signKey=abc&building=1&path=[{%22x%22%20:%20116.39028,%22y%22%20:%2039.992756},{%22x%22%20:%20116.39028,%22y%22%20:%2039.992752},{%22x%22%20:%20116.39023,%22y%22%20:%2039.992752},{%22x%22%20:%20116.39022,%22y%22%20:%2039.99283},{%22x%22%20:%20116.39015,%22y%22%20:%2039.99283},{%22x%22%20:%20116.39015,%22y%22%20:%2039.99283},{%22x%22%20:%20116.39,%22y%22%20:%2039.99283},{%22x%22%20:%20116.39,%22y%22%20:%2039.99292},{%22x%22%20:%20116.38999,%22y%22%20:%2039.9932},{%22x%22%20:%20116.38999,%22y%22%20:%2039.993202},{%22x%22%20:%20116.38998,%22y%22%20:%2039.993484},{%22x%22%20:%20116.38998,%22y%22%20:%2039.993538},{%22x%22%20:%20116.38997,%22y%22%20:%2039.993565},{%22x%22%20:%20116.38997,%22y%22%20:%2039.993683},{%22x%22%20:%20116.39043,%22y%22%20:%2039.993694},{%22x%22%20:%20116.39043,%22y%22%20:%2039.993683}]&lng=116.3902857050&lat=39.9927558339&card_id=109";
+
         CrashHandler crashHandler = CrashHandler.instance();
         crashHandler.init();
         //初始化相机
@@ -173,8 +179,29 @@ public class MainActivity extends FragmentActivity implements SensorEventListene
         initCamera();
         initIndoorMap();
         RequestManager.init(mContext);
+        //requestPath();
+       /* mPathFragment = PathFragment.newInstance(this, mIndoorMapFragment);
+        //mPathFragment.setSearchEditText(mSearchEditText);
+        mPathFragment.setLocationView(mLocationView);*/
+    }
+
+    /**
+     * 请求path及Road数据
+     * @param pathInfo
+     */
+    private void requestPath(final PathInfo pathInfo) {
+        StringBuilder url = new StringBuilder();
+        url.append(Constant.BASE_URL);
+        url.append("action=get_walk_by_gda&signKey=abc&building=1");
+        url.append("&lng="+geometry.get(0).getX());
+        url.append("&lat="+geometry.get(0).getY());
+        url.append("&card_id=70");
+        String path ;
+        Gson gson = new Gson();
+        path = gson.toJson(geometry).toString();
+        url.append("&path="+path);
         JsonObjectRequest jsonRequest = new JsonObjectRequest
-                (Request.Method.GET, a, null, new Response.Listener<JSONObject>() {
+                (Request.Method.GET, url.toString(), null, new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject response) {
                         // the response is already constructed as a JSONObject!
@@ -183,10 +210,47 @@ public class MainActivity extends FragmentActivity implements SensorEventListene
                             RoadPathInfo roadInfo = new RoadPathInfo();
                             response = response.getJSONObject("data");
                             roadInfo = gson.fromJson(response.toString(), RoadPathInfo.class);
+                            geometry = roadInfo.getPath();
+                            road = roadInfo.getRoad();
+                            pathInfo.getRoute().get(0).getPath().getNaviInfoList().get(0).setGeometry(geometry);
+                            drawRouteStartAndStop(gson.toJson(pathInfo).toString());
+                            mIndoorMapFragment.refreshMap();
+                            //navigation_ARroad();
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }, new Response.ErrorListener() {
 
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        error.printStackTrace();
+                    }
+                });
+
+        Volley.newRequestQueue(this).add(jsonRequest);
+    }
+
+
+    private void requestCardID(final PathInfo pathInfo) {
+        StringBuilder url = new StringBuilder();
+        url.append(Constant.BASE_URL);
+        url.append("action=get_locations&signKey=abc&building=1");
+        url.append("&lng="+geometry.get(geometry.size()-1).getX());
+        url.append("&lat="+geometry.get(geometry.size()-1).getY());
+        url.append("&point_sw=0");
+        url.append("&shop_sw=0");
+        url.append("&service_sw=0");
+        JsonObjectRequest jsonRequest = new JsonObjectRequest
+                (Request.Method.GET, url.toString(), null, new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        // the response is already constructed as a JSONObject!
+                        try {
+                            Gson gson = new Gson();
                             response = response.getJSONObject("args");
                             //String site = response.getString("site"),
-                              //      network = response.getString("network");
+                            //      network = response.getString("network");
                             //System.out.println("Site: "+site+"\nNetwork: "+network);
                         } catch (JSONException e) {
                             e.printStackTrace();
@@ -201,9 +265,6 @@ public class MainActivity extends FragmentActivity implements SensorEventListene
                 });
 
         Volley.newRequestQueue(this).add(jsonRequest);
-       /* mPathFragment = PathFragment.newInstance(this, mIndoorMapFragment);
-        //mPathFragment.setSearchEditText(mSearchEditText);
-        mPathFragment.setLocationView(mLocationView);*/
     }
 
     /**
@@ -272,7 +333,7 @@ public class MainActivity extends FragmentActivity implements SensorEventListene
         btn_route.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                btnSearchRoad();
+                planningRoad();
                 //btnGoHere();
             }
         });
@@ -325,27 +386,11 @@ public class MainActivity extends FragmentActivity implements SensorEventListene
                     btn_route_clear.setVisibility(View.VISIBLE);
                     mLocationView.setVisibility(View.VISIBLE);
                     btn_istest.setVisibility(View.VISIBLE);
-                    //mIndoorMapFragment.setMapScale(5);
 
                 }
-// else {
-//                    layoutParams.width = (int)(150 * Constant.density);
-//                    layoutParams.height = (int)(150 * Constant.density);
-//                    mIndoorMapFragment.hideAmapLogo();
-//                    mIndoorMapFragment.hideCompassView();
-//                    mIndoorMapFragment.hideFloorView();
-//                    mIndoorMapFragment.hideZoomView();
-//                    flag = true;
-//                }
-
-               // Toast.makeText(mContext, id, Toast.LENGTH_SHORT).show();
             }
         });
         IMDataManager.setRequestTimeOut(5000);
-//        mDataManager.setDataPath(Environment.getExternalStorageDirectory() + "/test_data");
-//        mDataManager.downloadBuildingData(mContext,defaultBuilding, mDataDownloadListener);
-        //mDataManager.setDataPath(Environment.getExternalStorageDirectory() + "/test_data");
-        //mIndoorMapFragment.setDataPath(Environment.getExternalStorageDirectory() + "/test_data");
         mIndoorMapFragment.loadMap(defaultBuilding, mMapLoadListener);//B023B173VP
         mIndoorMapFragment.setMapEventListener(mMapEventListener);
         mIndoorMapFragment.initSwitchFloorToolBar();
@@ -376,14 +421,6 @@ public class MainActivity extends FragmentActivity implements SensorEventListene
     初始化摄像头
     */
     private void initCamera() {
-
-//        try {
-//            mCamera = getCameraInstance();
-//        }catch (Exception e){
-//            Toast.makeText(mContext,"摄像头问题", Toast.LENGTH_SHORT).show();
-//            return;
-//        }
-
         txtOrientationTextView = (TextView) findViewById(R.id.txtOrientationTextView);
         // Get the SensorManager instance
 //        txtOrientationTextView.setText("key:\n22dda8de2a3800c30147cb0f3f119a1c\n\n"+
@@ -411,37 +448,7 @@ public class MainActivity extends FragmentActivity implements SensorEventListene
         public void onMapLoadSuccess() {
             Toast.makeText(mIndoorMapFragment.getActivity(), "地图加载完毕",
                     Toast.LENGTH_LONG).show();
-            //mIndoorMapFragment.setMapScale(5);
-            if (mDataManager.getCurrentBuildingId().equals("B000A80ZU6")) //B023B173VP B000A80ZU6
-            {
-//                AssetManager asset=mContext.getAssets();
-//                InputStream input = null;
-//                try {
-//                    input = asset.open("shpdata.bin");
-//                    int len = input.available();
-//                    byte[] buffer = new byte[len];
-//                    input.read(buffer);
-//                    input.close();
-//                    mDataManager.setExtensionData(buffer);
-//                } catch (IOException e) {
-//                    e.printStackTrace();
-//                }
-                if (mDataManager.getCurrentFloorNo() == 1 && mCustomImage == null) {
-                    mCustomImage = new ImageView(mContext);
-                    mCustomImage.setImageResource(R.drawable.compass);
-                    RelativeLayout rootlayout = (RelativeLayout) findViewById(R.id.rootlayout);
-                    //rootlayout.addView(mCustomImage);
-                    //mFrameDrawOverRunnable = new FrameDrawOverRunnable();
-                }
-            } else {
-                if (mCustomImage != null) {
-                    RelativeLayout rootlayout = (RelativeLayout) findViewById(R.id.rootlayout);
-                    rootlayout.removeView(mCustomImage);
-                    mCustomImage = null;
-                    //mFrameDrawOverRunnable = null;
-                }
-            }
-            initLocating(Configuration.LocationProvider.BLE);
+            initLocating(Configuration.LocationProvider.BLE); //蓝牙定位
             //initLocating(Configuration.LocationProvider.WIFI);
 
         }
@@ -485,6 +492,9 @@ public class MainActivity extends FragmentActivity implements SensorEventListene
         });
     }
 
+    /**
+     * 地图事件监听
+     */
     private IMMapEventListener mMapEventListener = new IMMapEventListener() {
         @Override
         public void onMarkerClick(String sourceID) {
@@ -685,39 +695,11 @@ public class MainActivity extends FragmentActivity implements SensorEventListene
 
     }
 
-//    private class FrameDrawOverRunnable implements Runnable {
-//        @Override
-//        public void run() {
-//            if (mCustomImage != null && mIndoorMapFragment != null) {
-//                IMPoint pt = mIndoorMapFragment.convertCoordinateToScreen(120.10769851677900, 30.299475678357201);
-//                mCustomImage.layout((int) pt.getX() - mCustomImage.getWidth() / 2,
-//                        (int) pt.getY() - mCustomImage.getHeight() / 2,
-//                        (int) pt.getX() + mCustomImage.getWidth() / 2,
-//                        (int) pt.getY() + mCustomImage.getHeight() / 2);
-//            }
-//        }
-//
-//    }
-
 
     /**
-     * 安全获取Camera对象实例的方法
+     * 下载回调接口（暂时不用）
      */
-
-    public static Camera getCameraInstance() {
-        Camera c = null;
-        try {
-            c = Camera.open(); // 试图获取Camera实例
-        } catch (RuntimeException e) {
-            // 摄像头不可用（正被占用或不存在）
-        }
-        return c; // 不可用则返回null
-    }
-
-    /**
-     * 下载回调接口
-     */
-    private IMDataDownloadListener mDataDownloadListener = new IMDataDownloadListener() {
+    /*private IMDataDownloadListener mDataDownloadListener = new IMDataDownloadListener() {
 
         @Override
         public void onDownloadSuccess(String buildingId) {
@@ -741,57 +723,8 @@ public class MainActivity extends FragmentActivity implements SensorEventListene
 
         }
 
-    };
+    };*/
 
-    /**
-     * 点击去这里按钮
-     */
-   /* public void btnGoHere() {
-
-//        if (mLastSelectedPoiId == null) {
-//            new AlertDialog.Builder(mIndoorMapFragment.getActivity())
-//                    .setTitle("提示")
-//                    .setMessage("未选择要到达的点!")
-//                    .setIcon(
-//                            android.R.drawable.ic_dialog_alert)
-//                    .setPositiveButton("确定", null).show();
-//            return;
-//        }
-        if(mPathFragment==null)
-            return;
-        mPathFragment.clear();
-        PoiInfo mInfoTo = new PoiInfo();
-        mInfoTo.PoiInfoType = Constant.TYPE_ROUTE_PLANNING_POI;
-        PoiMapCell tmpPoiMapCell = new PoiMapCell();
-        if (mLastSelectedPoiId != null && !mLastSelectedPoiId.equals("")) {
-            tmpPoiMapCell.setPoiId(mLastSelectedPoiId);
-            tmpPoiMapCell.setName(mLastSelectedPoiId);
-        } else {
-            tmpPoiMapCell.setPoiId(mLastSelectedPoiId);
-            tmpPoiMapCell.setName("选择终点");
-        }
-        mInfoTo.cell = tmpPoiMapCell;
-        mInfoTo.floor = new IMFloorInfo(mIndoorMapFragment.getCurrentFloorNo(), "", "0");
-        //mPathFragment.setPoiInfoFrom();
-        //mPathFragment.setPoiInfoTo(mInfoTo);
-
-        //mSearchEditText.setVisibility(View.GONE);
-        mLocationView.setVisibility(View.GONE);
-
-        FragmentTransaction transcation = getSupportFragmentManager().beginTransaction();
-
-        transcation.setCustomAnimations(0, 0, 0,0);
-
-        if (!mPathFragment.isAdded()) {
-            transcation.hide(mIndoorMapFragment).add(R.id.indoor_main_view, mPathFragment)
-                    .commit();
-        } else {
-            transcation.hide(mIndoorMapFragment).show(mPathFragment)
-                    .commit();
-        }
-
-
-    }*/
 
     public Context getContext() {
         return mContext;
@@ -1033,6 +966,12 @@ public class MainActivity extends FragmentActivity implements SensorEventListene
                 }
             }
         }
+
+        /**
+         * 定位结果
+         * @param msg
+         * @param isOnline
+         */
         void onLocated(Message msg, boolean isOnline){
             IMLog.logd("onLocated");
             MainActivity parent = mParent.get();
@@ -1068,8 +1007,12 @@ public class MainActivity extends FragmentActivity implements SensorEventListene
                     + result.a + ", accuracy:"
                     + result.r);
 
-            if(parent.isNavi && parent.geometry != null && parent.geometry.size() > 0){
-                parent.navigation();
+//            if(parent.isNavi && parent.geometry != null && parent.geometry.size() > 0){
+//                parent.navigation();
+//            }
+
+            if(parent.isNavi && parent.road != null && parent.road.size() > 0){
+                parent.navigation_ARroad();
             }
 //            parent.txtOrientationTextView.setText("我的位置：\n"+" lng:" + result.x + ", \nlat:"
 //                    + result.y + ", \nfloor:"
@@ -1121,7 +1064,9 @@ public class MainActivity extends FragmentActivity implements SensorEventListene
     };
 
 
-    // 计算方向
+    /**
+     * 方向计算
+     */
     private void calculateOrientation() {
         float[] values = new float[3];
         float[] R = new float[9];
@@ -1179,24 +1124,24 @@ public class MainActivity extends FragmentActivity implements SensorEventListene
     }
 
     /**
-     * 导航位置判断
+     * 导航位置判断（线导）
      *
      */
     private void navigation() {
         if(index < geometry.size()){
             if(index == 0){
                 distance_ab = CommonUtil.getDistance(mLastPoint.getX(),mLastPoint.getY(),geometry.get(index).getX(),geometry.get(index).getY());
-                if(distance_ab < THRESHOLD){
+                if(distance_ab < THRESHOLD_POINT){
                     isOnway = true;
                     index++;
                 }else{
                     return;
                 }
             }else if(index == geometry.size()-1){
-                distance_ab = CommonUtil.getDistance(mLastPoint.getX(),mLastPoint.getY(),geometry.get(index-1).getX(),geometry.get(index).getY()-1);
+                distance_ab = CommonUtil.getDistance(mLastPoint.getX(),mLastPoint.getY(),geometry.get(index-1).getX(),geometry.get(index-1).getY());
                 distance_ac = CommonUtil.getDistance(mLastPoint.getX(),mLastPoint.getY(),geometry.get(index).getX(),geometry.get(index).getY());
                 distance_bc = CommonUtil.getDistance(geometry.get(index-1).getX(),geometry.get(index-1).getY(),geometry.get(index).getX(),geometry.get(index).getY());
-                if(distance_ac < THRESHOLD){
+                if(distance_ac < THRESHOLD_POINT){
                     isOnway = true;
                     isNavi = false;
                     Toast.makeText(mContext,"到达！",Toast.LENGTH_SHORT).show();
@@ -1206,14 +1151,14 @@ public class MainActivity extends FragmentActivity implements SensorEventListene
                 distance_ab = CommonUtil.getDistance(mLastPoint.getX(),mLastPoint.getY(),geometry.get(index-1).getX(),geometry.get(index-1).getY());
                 distance_ac = CommonUtil.getDistance(mLastPoint.getX(),mLastPoint.getY(),geometry.get(index).getX(),geometry.get(index).getY());
                 distance_bc = CommonUtil.getDistance(geometry.get(index-1).getX(),geometry.get(index-1).getY(),geometry.get(index).getX(),geometry.get(index).getY());
-                if(distance_ab + distance_ac <= distance_bc+THRESHOLD){
+                if(distance_ab + distance_ac <= distance_bc+THRESHOLD_WAY){
                     isOnway = true;
-                    if(distance_ac <= THRESHOLD){
+                    if(distance_ac <= THRESHOLD_POINT){
                         index++;
                     }
                 }else{
                     isOnway = false;
-                    btnSearchRoad();
+                    planningRoad();
                     //Toast.makeText(mContext,"偏离线路，重新规划",Toast.LENGTH_SHORT).show();
                 }
             }
@@ -1232,26 +1177,110 @@ public class MainActivity extends FragmentActivity implements SensorEventListene
         }
     }
 
-    public void setBegin(){
-        //Bundle bundle = new  Bundle();
-        //bundle.putSerializable(KEY_POI, mSingleSnapPoi);
 
+    /**
+     * 导航位置判断（AR导航）
+     *
+     */
+    private void navigation_ARroad() {
+        if(index < road.size()){
+
+//            mLastPoint = new IMPoint();
+//            mLastPoint.setX(road.get(0).getPrev().getX()-0.0000001);
+//            mLastPoint.setY(road.get(0).getPrev().getY()-0.0000001);
+            endDistance = CommonUtil.getDistance(mLastPoint.getX(),mLastPoint.getY(),
+                    road.get(index).getEndRoad().getX(),road.get(index).getEndRoad().getY());
+            subText = road.get(index).getSubText();
+            //endDistance = CommonUtil.formatData(endDistance);
+            mentionInfo = road.get(index).getDesc();
+            if(mentionInfo.contains("d")){
+                mentionInfo = mentionInfo.replaceAll("d",CommonUtil.formatData(endDistance)+"");
+            }
+
+            if(index == 0){ //起点位置判断
+                distance_ab = CommonUtil.getDistance(mLastPoint.getX(),mLastPoint.getY(),
+                        road.get(index).getPrev().getX(),road.get(index).getPrev().getY());
+                if(distance_ab < THRESHOLD_POINT){
+                    isOnway = true;
+                    index++;
+                }else{
+                    return;
+                }
+            }else if(index == road.size()-1){ //终点到达判断
+                distance_ab = CommonUtil.getDistance(mLastPoint.getX(),mLastPoint.getY(),
+                        road.get(index).getPrev().getX(),road.get(index).getPrev().getY());
+                distance_ac = CommonUtil.getDistance(mLastPoint.getX(),mLastPoint.getY(),
+                        road.get(index).getCurr().getX(),road.get(index).getCurr().getY());
+                distance_bc = CommonUtil.getDistance(road.get(index).getPrev().getX(),
+                        road.get(index).getPrev().getY(),
+                        road.get(index).getCurr().getX(),
+                        road.get(index).getCurr().getY());
+                if(distance_ac < THRESHOLD_POINT){
+                    isOnway = true;
+                    isNavi = false;
+                    Toast.makeText(mContext,"到达！",Toast.LENGTH_SHORT).show();
+                    txtOrientationTextView.setText("已到达目的地");
+                }
+
+            }else{ //路程中判断
+                distance_ab = CommonUtil.getDistance(mLastPoint.getX(),mLastPoint.getY(),
+                        road.get(index).getPrev().getX(),road.get(index).getPrev().getY());
+                distance_ac = CommonUtil.getDistance(mLastPoint.getX(),mLastPoint.getY(),
+                        road.get(index).getCurr().getX(),road.get(index).getCurr().getY());
+                distance_bc = CommonUtil.getDistance(road.get(index).getPrev().getX(),
+                        road.get(index).getPrev().getY(),
+                        road.get(index).getCurr().getX(),
+                        road.get(index).getCurr().getY());
+//                distance_ab = CommonUtil.getDistance(mLastPoint.getX(),mLastPoint.getY(),
+//                        geometry.get(index-1).getX(),geometry.get(index-1).getY());
+//                distance_ac = CommonUtil.getDistance(mLastPoint.getX(),mLastPoint.getY(),geometry.get(index).getX(),geometry.get(index).getY());
+//                distance_bc = CommonUtil.getDistance(geometry.get(index-1).getX(),geometry.get(index-1).getY(),geometry.get(index).getX(),geometry.get(index).getY());
+                if(distance_ab + distance_ac <= distance_bc+THRESHOLD_WAY){
+                    isOnway = true;
+                    if(THRESHOLD_POINT-1 < distance_ac && distance_ac <= THRESHOLD_POINT){
+                        mentionInfo = road.get(index).getDesc2();
+                        if(distance_ac <= THRESHOLD_POINT){
+                            mentionInfo = road.get(index).getDesc();
+                            index++;
+                        }
+                        if(mentionInfo.contains("d")){
+                            mentionInfo.replaceAll("d",CommonUtil.formatData(endDistance)+"");
+                        }
+                    }
+
+                }else{
+                    isOnway = false;
+                    planningRoad();
+                    //Toast.makeText(mContext,"偏离线路，重新规划",Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            stringBuilder = new StringBuilder();
+            stringBuilder.append("主提示：" + mentionInfo +"\n");
+            stringBuilder.append("副提示：" + subText +"\n\n");
+            stringBuilder.append("该路共有点：" + road.size()+"个\n");
+            stringBuilder.append("当前已经过：" + index+"号点\n");
+            //stringBuilder.append("当前位置： x: "+mLastPoint.getX()+"  y:" +mLastPoint.getY()+"\n");
+            stringBuilder.append("是否在线内：" + isOnway +"\n");
+            //stringBuilder.append("前点： x:"+geometry.get(1).getX()+"  y:" +geometry.get(1).getY()+"\n");
+            //stringBuilder.append("后点： x:"+geometry.get(2).getX()+"  y:" +geometry.get(2).getY()+"\n");
+            stringBuilder.append("距离前点：" +distance_ab+"\n");
+            stringBuilder.append("距离后点："+distance_ac+"\n");
+            stringBuilder.append("前后点距离："+distance_bc+"\n");
+            txtOrientationTextView.setText(stringBuilder);
+
+        }
+    }
+
+    /**
+     * 测试写死起点终点数据
+     */
+    public void setBegin(){
         index = 0; //导航位置归零
 
         PoiInfo tmpPoiInfo = new PoiInfo();
         tmpPoiInfo.PoiInfoType = Constant.TYPE_ROUTE_PLANNING_POI;
         String curSelectId = "ZH0000300210100051"; //ZH0000300210100152 ZH0000300210100024
-//        String curSelectId = mIndoorMapFragment.getCurrentSelectSourceId();
-//        if (curSelectId == null || curSelectId.equals("")) {
-//            new AlertDialog.Builder(mIndoorMapFragment.getActivity())
-//                    .setTitle("提示")
-//                    .setMessage("未选择目标位置!")
-//                    .setIcon(
-//                            android.R.drawable.ic_dialog_alert)
-//                    .setPositiveButton("确定", null).show();
-//            return;
-//        }
-        //int floorNo = mIndoorMapFragment.getCurrentFloorNo();
         int floorNo = 1;
         IMFloorInfo tmpFloorInfo = new IMFloorInfo(floorNo, "");
         PoiMapCell tmpPoiMapCell = new PoiMapCell();
@@ -1288,19 +1317,12 @@ public class MainActivity extends FragmentActivity implements SensorEventListene
             tmpPoiInfo_from.floor = tmpFloorInfo1;
         }
         mInfoFrom = tmpPoiInfo_from;
-
-        //mPathFragment.setPoiInfoTo(tmpPoiInfo1);
-
-//        if (mPoiInfoKey == POI_INFO_FROM_KEY) {
-//            mPathFragment.setPoiInfoFrom(tmpPoiInfo);
-//        } else {
-//            mPathFragment.setPoiInfoTo(tmpPoiInfo);
-//        }
-//
-//        finish(null);
     }
 
-    public void btnSearchRoad(){
+    /**
+     * 路径规划
+     */
+    public void planningRoad(){
         setBegin();
         if(mInfoFrom==null){
             Toast.makeText(mContext, "请选择起始点", Toast.LENGTH_LONG).show();
@@ -1364,6 +1386,8 @@ public class MainActivity extends FragmentActivity implements SensorEventListene
             Gson gson = new Gson();
             PathInfo object= gson.fromJson(routePlanningData, PathInfo.class);
             geometry = object.getRoute().get(0).getPath().getNaviInfoList().get(0).getGeometry();
+            //requestCardID(object);
+            requestPath(object);
             stringBuilder = new StringBuilder();
             stringBuilder.append("获得途径点数：" + geometry.size()+"\n");
             stringBuilder.append("当前位置： x: "+geometry.get(0).getX()+"  y:" +(geometry.get(0).getY()-0.00036)+"\n");
@@ -1374,8 +1398,8 @@ public class MainActivity extends FragmentActivity implements SensorEventListene
             stringBuilder.append("距离后点： x:"+CommonUtil.formatData(CommonUtil.getDistance((geometry.get(0).getX()+0.00002),(geometry.get(0).getY()-0.00036),geometry.get(2).getX(),geometry.get(2).getY()))+"\n");
             stringBuilder.append("前后点距离："+CommonUtil.formatData(CommonUtil.getDistance(geometry.get(1).getX(),geometry.get(1).getY(),geometry.get(2).getX(),geometry.get(2).getY()))+"\n");
             //txtOrientationTextView.setText(stringBuilder);
-            drawRouteStartAndStop(routePlanningData);
-            mIndoorMapFragment.refreshMap();
+//            drawRouteStartAndStop(routePlanningData);
+//            mIndoorMapFragment.refreshMap();
             IMLog.logd("#######--------currentroutejson data:" + IMDataManager.getInstance().getRouteData());
             //finish(null);
 

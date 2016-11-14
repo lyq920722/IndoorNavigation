@@ -14,12 +14,12 @@ public class RoadPathInfo {
      * index : 2
      * locations :
      */
-    private List<PathEntity> path;
+    private List<GeometryEntity> path;
     private List<RoadEntity> road;
     private String index;
     private String[] locations;
 
-    public void setPath(List<PathEntity> path) {
+    public void setPath(List<GeometryEntity> path) {
         this.path = path;
     }
 
@@ -35,7 +35,7 @@ public class RoadPathInfo {
         this.locations = locations;
     }
 
-    public List<PathEntity> getPath() {
+    public List<GeometryEntity> getPath() {
         return path;
     }
 
@@ -51,11 +51,11 @@ public class RoadPathInfo {
         return locations;
     }
 
-    public class PathEntity {
-        /**
+    /*public class PathEntity {
+        *//**
          * x : 116.3903053383
          * y : 39.9927523808
-         */
+         *//*
         private double x;
         private double y;
 
@@ -74,7 +74,7 @@ public class RoadPathInfo {
         public double getY() {
             return y;
         }
-    }
+    }*/
 
     public class RoadEntity {
         /**
