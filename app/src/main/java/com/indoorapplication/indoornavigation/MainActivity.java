@@ -129,7 +129,6 @@ public class MainActivity extends FragmentActivity implements SensorEventListene
     private Button btn_route;
     private Button btn_route_clear;
     private IMPoint mLastPoint = null;
-    private PriviewFragment priviewFragment = null;
     private List<GeometryEntity> geometry;
     private List<RoadPathInfo.RoadEntity> road;
 
@@ -158,9 +157,7 @@ public class MainActivity extends FragmentActivity implements SensorEventListene
         super.onCreate(savedInstanceState);
         mContext = this.getApplicationContext();
         setContentView(R.layout.activity_main);
-
-
-
+        //crash收集
         CrashHandler crashHandler = CrashHandler.instance();
         crashHandler.init();
         //初始化相机
@@ -174,7 +171,7 @@ public class MainActivity extends FragmentActivity implements SensorEventListene
                     new String[]{Manifest.permission.CAMERA}, 1);//1 can be another integer
         }
         CommonUtil.initDisplayMetrics(this);
-
+        initView();
         initLocationButton();
         initCamera();
         initIndoorMap();
@@ -186,86 +183,20 @@ public class MainActivity extends FragmentActivity implements SensorEventListene
     }
 
     /**
-     * 请求path及Road数据
-     * @param pathInfo
+     * 初始化控件
      */
-    private void requestPath(final PathInfo pathInfo) {
-        StringBuilder url = new StringBuilder();
-        url.append(Constant.BASE_URL);
-        url.append("action=get_walk_by_gda&signKey=abc&building=1");
-        url.append("&lng="+geometry.get(0).getX());
-        url.append("&lat="+geometry.get(0).getY());
-        url.append("&card_id=70");
-        String path ;
-        Gson gson = new Gson();
-        path = gson.toJson(geometry).toString();
-        url.append("&path="+path);
-        JsonObjectRequest jsonRequest = new JsonObjectRequest
-                (Request.Method.GET, url.toString(), null, new Response.Listener<JSONObject>() {
-                    @Override
-                    public void onResponse(JSONObject response) {
-                        // the response is already constructed as a JSONObject!
-                        try {
-                            Gson gson = new Gson();
-                            RoadPathInfo roadInfo = new RoadPathInfo();
-                            response = response.getJSONObject("data");
-                            roadInfo = gson.fromJson(response.toString(), RoadPathInfo.class);
-                            geometry = roadInfo.getPath();
-                            road = roadInfo.getRoad();
-                            pathInfo.getRoute().get(0).getPath().getNaviInfoList().get(0).setGeometry(geometry);
-                            drawRouteStartAndStop(gson.toJson(pathInfo).toString());
-                            mIndoorMapFragment.refreshMap();
-                            //navigation_ARroad();
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }, new Response.ErrorListener() {
-
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        error.printStackTrace();
-                    }
-                });
-
-        Volley.newRequestQueue(this).add(jsonRequest);
+    private void initView(){
+        mLocationView = (ImageView)findViewById(R.id.locating_btn);  //定位按钮
+        txtOrientationTextView = (TextView) findViewById(R.id.txtOrientationTextView);
+        layout_map = (LinearLayout) findViewById(R.id.layout_map);
+        view_map = findViewById(R.id.view_map);
+        img_close = (ImageView) findViewById(R.id.img_close);
+        btn_route = (Button) findViewById(R.id.btn_route);
+        btn_route_clear = (Button) findViewById(R.id.btn_route_clear);
+        btn_istest = (Button) findViewById(R.id.btn_istest);
     }
 
 
-    private void requestCardID(final PathInfo pathInfo) {
-        StringBuilder url = new StringBuilder();
-        url.append(Constant.BASE_URL);
-        url.append("action=get_locations&signKey=abc&building=1");
-        url.append("&lng="+geometry.get(geometry.size()-1).getX());
-        url.append("&lat="+geometry.get(geometry.size()-1).getY());
-        url.append("&point_sw=0");
-        url.append("&shop_sw=0");
-        url.append("&service_sw=0");
-        JsonObjectRequest jsonRequest = new JsonObjectRequest
-                (Request.Method.GET, url.toString(), null, new Response.Listener<JSONObject>() {
-                    @Override
-                    public void onResponse(JSONObject response) {
-                        // the response is already constructed as a JSONObject!
-                        try {
-                            Gson gson = new Gson();
-                            response = response.getJSONObject("args");
-                            //String site = response.getString("site"),
-                            //      network = response.getString("network");
-                            //System.out.println("Site: "+site+"\nNetwork: "+network);
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }, new Response.ErrorListener() {
-
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        error.printStackTrace();
-                    }
-                });
-
-        Volley.newRequestQueue(this).add(jsonRequest);
-    }
 
     /**
      * 初始化室内地图
@@ -276,13 +207,6 @@ public class MainActivity extends FragmentActivity implements SensorEventListene
 //                .findFragmentById(R.id.indoor_main_map_view);
         mIndoorMapFragment = (IMIndoorMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.indoor_main_map_view);
-
-        layout_map = (LinearLayout) findViewById(R.id.layout_map);
-        view_map = findViewById(R.id.view_map);
-        img_close = (ImageView) findViewById(R.id.img_close);
-        btn_route = (Button) findViewById(R.id.btn_route);
-        btn_route_clear = (Button) findViewById(R.id.btn_route_clear);
-        btn_istest = (Button) findViewById(R.id.btn_istest);
 
         btn_istest.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -296,19 +220,6 @@ public class MainActivity extends FragmentActivity implements SensorEventListene
                     mLocationView.setImageResource(R.drawable.indoor_gps_locked);
                     mLocationStatus = false;
                     mFirstCenter = false;
-                    /*if (!mLocationStatus) {         // 处理开始定位
-                        startLocating();
-                        mLocationView.setImageResource(R.drawable.indoor_gps_locked);
-                        mLocationStatus = true;
-                        mFirstCenter = false;
-                    } else {                    // 处理结束定位
-                        stopLocating();
-                        mLocationView.setImageResource(R.drawable.indoor_gps_unlocked);
-                        mIndoorMapFragment.clearLocatingPosition();
-                        mIndoorMapFragment.clearLocationOnFloorView();
-                        mIndoorMapFragment.refreshMap();
-                        mLocationStatus = false;
-                    }*/
                     txtOrientationTextView.setText("我的位置："+"");
                     mIndoorMapFragment.refreshMap();
                 }else{
@@ -421,11 +332,6 @@ public class MainActivity extends FragmentActivity implements SensorEventListene
     初始化摄像头
     */
     private void initCamera() {
-        txtOrientationTextView = (TextView) findViewById(R.id.txtOrientationTextView);
-        // Get the SensorManager instance
-//        txtOrientationTextView.setText("key:\n22dda8de2a3800c30147cb0f3f119a1c\n\n"+
-//                "BuildId: B000A80ZU6\n\n"+
-//                "SHA:\n" + CommonUtil.SHA1(mContext)+"\n\n"+"packege:\n"+ this.getPackageName());
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         // 创建Preview view并将其设为activity中的内容
         mPreview = new CameraPreview(this);
@@ -466,8 +372,6 @@ public class MainActivity extends FragmentActivity implements SensorEventListene
      * 初始化定位按钮
      */
     private void initLocationButton() {
-
-        mLocationView = (ImageView)findViewById(R.id.locating_btn);
 
         mLocationView.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -546,18 +450,7 @@ public class MainActivity extends FragmentActivity implements SensorEventListene
                 }
                 Toast.makeText(mContext, toasttext, Toast.LENGTH_SHORT).show();
 
-            } else {
-                // 取消选择
-//                mIndoorMapFragment.clearSelected();
-//                mIndoorMapFragment.clearHighlight();
-                //mLastSelectedPoiId = "";
             }
-
-//            // 再路算选点界面下,不显示去这里按钮
-//            if (mPathFragment == null || !mPathFragment.isPoiSelect()) {
-//                mBottomViewDetail.setVisibility(View.VISIBLE);
-//                mTextPoi.setText(poiId);
-//            }
         }
 
         @Override
@@ -1184,10 +1077,6 @@ public class MainActivity extends FragmentActivity implements SensorEventListene
      */
     private void navigation_ARroad() {
         if(index < road.size()){
-
-//            mLastPoint = new IMPoint();
-//            mLastPoint.setX(road.get(0).getPrev().getX()-0.0000001);
-//            mLastPoint.setY(road.get(0).getPrev().getY()-0.0000001);
             endDistance = CommonUtil.getDistance(mLastPoint.getX(),mLastPoint.getY(),
                     road.get(index).getEndRoad().getX(),road.get(index).getEndRoad().getY());
             subText = road.get(index).getSubText();
@@ -1273,7 +1162,7 @@ public class MainActivity extends FragmentActivity implements SensorEventListene
     }
 
     /**
-     * 测试写死起点终点数据
+     * 路径起终点设置
      */
     public void setBegin(){
         index = 0; //导航位置归零
@@ -1371,7 +1260,7 @@ public class MainActivity extends FragmentActivity implements SensorEventListene
 
 
     /**
-     * 路算回调接口
+     * 路算回调接口（路径规划planningRoad（）回调）
      */
     private IMRoutePlanningListener mRoutePlanningListener = new IMRoutePlanningListener() {
         @Override
@@ -1387,19 +1276,7 @@ public class MainActivity extends FragmentActivity implements SensorEventListene
             PathInfo object= gson.fromJson(routePlanningData, PathInfo.class);
             geometry = object.getRoute().get(0).getPath().getNaviInfoList().get(0).getGeometry();
             //requestCardID(object);
-            requestPath(object);
-            stringBuilder = new StringBuilder();
-            stringBuilder.append("获得途径点数：" + geometry.size()+"\n");
-            stringBuilder.append("当前位置： x: "+geometry.get(0).getX()+"  y:" +(geometry.get(0).getY()-0.00036)+"\n");
-            stringBuilder.append("是否在线内：" + "true" +"\n");
-            stringBuilder.append("前点： x:"+geometry.get(1).getX()+"  y:" +geometry.get(1).getY()+"\n");
-            stringBuilder.append("后点： x:"+geometry.get(2).getX()+"  y:" +geometry.get(2).getY()+"\n");
-            stringBuilder.append("距离前点："+CommonUtil.formatData(CommonUtil.getDistance((geometry.get(0).getX()+0.00002),(geometry.get(0).getY()-0.00036),geometry.get(1).getX(),geometry.get(1).getY()))+"\n");
-            stringBuilder.append("距离后点： x:"+CommonUtil.formatData(CommonUtil.getDistance((geometry.get(0).getX()+0.00002),(geometry.get(0).getY()-0.00036),geometry.get(2).getX(),geometry.get(2).getY()))+"\n");
-            stringBuilder.append("前后点距离："+CommonUtil.formatData(CommonUtil.getDistance(geometry.get(1).getX(),geometry.get(1).getY(),geometry.get(2).getX(),geometry.get(2).getY()))+"\n");
-            //txtOrientationTextView.setText(stringBuilder);
-//            drawRouteStartAndStop(routePlanningData);
-//            mIndoorMapFragment.refreshMap();
+            requestPath(object);   //获取路径成功后向服务器请求数据
             IMLog.logd("#######--------currentroutejson data:" + IMDataManager.getInstance().getRouteData());
             //finish(null);
 
@@ -1459,5 +1336,49 @@ public class MainActivity extends FragmentActivity implements SensorEventListene
         return info;
     }
 
+    /**
+     * 请求path及Road数据
+     * @param pathInfo
+     */
+    private void requestPath(final PathInfo pathInfo) {
+        StringBuilder url = new StringBuilder();
+        url.append(Constant.BASE_URL);
+        url.append("action=get_walk_by_gda&signKey=abc&building=1");
+        url.append("&lng="+geometry.get(0).getX());
+        url.append("&lat="+geometry.get(0).getY());
+        url.append("&card_id=70");
+        String path ;
+        Gson gson = new Gson();
+        path = gson.toJson(geometry).toString();
+        url.append("&path="+path);
+        JsonObjectRequest jsonRequest = new JsonObjectRequest
+                (Request.Method.GET, url.toString(), null, new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        // the response is already constructed as a JSONObject!
+                        try {
+                            Gson gson = new Gson();
+                            RoadPathInfo roadInfo = new RoadPathInfo();
+                            response = response.getJSONObject("data");
+                            roadInfo = gson.fromJson(response.toString(), RoadPathInfo.class);
+                            geometry = roadInfo.getPath();
+                            road = roadInfo.getRoad();
+                            pathInfo.getRoute().get(0).getPath().getNaviInfoList().get(0).setGeometry(geometry);
+                            drawRouteStartAndStop(gson.toJson(pathInfo).toString());
+                            mIndoorMapFragment.refreshMap();
+                            //navigation_ARroad();
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }, new Response.ErrorListener() {
 
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        error.printStackTrace();
+                    }
+                });
+
+        Volley.newRequestQueue(this).add(jsonRequest);
+    }
 }
